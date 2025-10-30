@@ -5,13 +5,13 @@
  */
 
 // 1. CONFIG & SESSION
-require_once 'config.php';
+require_once '../config.php';
 $user_id = $_SESSION['user_id'] ?? null;
 $user_role = $_SESSION['role'] ?? 'guest';
 
 // 2. GET CLUB ID
 if (!isset($_GET['club_id'])) {
-    header('Location: browse_clubs.php');
+    header('Location: ../club/browse_clubs.php');
     exit;
 }
 $club_id = (int)$_GET['club_id'];
@@ -39,7 +39,7 @@ $has_post_permission = ($membership['can_post'] == 1);
 if (!$is_club_admin && !$is_super_admin && !$has_post_permission) {
     // If user is not an admin AND does not have post permission, deny access.
     $_SESSION['error_message'] = "You do not have permission to post in this club.";
-    header('Location: view_club.php?id=' . $club_id);
+    header('Location: ../club/view_club.php?id=' . $club_id);
     exit;
 }
 
@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Redirect back to the club page to see the new post
             $_SESSION['message'] = "New post created successfully!";
-            header('Location: view_club.php?id=' . $club_id);
+            header('Location: ../club/view_club.php?id=' . $club_id);
             exit;
 
         } catch (PDOException $e) {
@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // 6. HTML VIEW
-require_once 'header.php';
+require_once '../template/header.php';
 ?>
 
 <!-- Re-using the auth-wrapper and auth-card for styling -->
@@ -109,5 +109,5 @@ require_once 'header.php';
 </div>
 
 <?php
-require_once 'footer.php';
+require_once '../template/footer.php';
 ?>

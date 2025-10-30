@@ -8,7 +8,7 @@
  */
 
 // 1. CONFIG & SESSION
-require_once 'config.php';
+require_once '../config.php';
 $user_id = $_SESSION['user_id'] ?? null;
 $user_role = $_SESSION['role'] ?? 'guest';
 
@@ -69,7 +69,7 @@ $stmt = $pdo->query("SELECT user_id, username, email, role, created_at FROM user
 $all_users = $stmt->fetchAll();
 
 // 5. HTML VIEW
-require_once 'header.php';
+require_once '../template/header.php';
 ?>
 
 <div class="dashboard-card">
@@ -159,5 +159,5 @@ require_once 'header.php';
 </style>
 
 <?php
-require_once 'footer.php';
+require_once '../template/footer.php';
 ?>

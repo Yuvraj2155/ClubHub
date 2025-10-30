@@ -7,7 +7,7 @@
  */
 
 // 1. CONFIG & SESSION
-require_once 'config.php';
+require_once '../config.php';
 
 // Check for admin action (e.g., deleting a club)
 // This is a Super Admin action
@@ -39,7 +39,7 @@ $stmt = $pdo->query(
 $clubs = $stmt->fetchAll();
 
 // 3. HTML VIEW
-require_once 'header.php';
+require_once '../template/header.php';
 ?>
 
 <div class="dashboard-card">
@@ -94,5 +94,5 @@ require_once 'header.php';
 </div>
 
 <?php
-require_once 'footer.php';
+require_once '../template/footer.php';
 ?>

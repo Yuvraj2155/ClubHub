@@ -8,13 +8,13 @@
  */
 
 // 1. CONFIG & SESSION
-require_once 'config.php';
+require_once '../config.php';
 $user_id = $_SESSION['user_id'] ?? null;
 $user_role = $_SESSION['role'] ?? 'guest';
 
 // 2. GET CLUB ID
 if (!isset($_GET['club_id'])) {
-    header('Location: browse_clubs.php');
+    header('Location: ../club/browse_clubs.php');
     exit;
 }
 $club_id = (int)$_GET['club_id'];
@@ -25,7 +25,7 @@ $stmt->execute([$club_id]);
 $club = $stmt->fetch();
 
 if (!$club) {
-    header('Location: browse_clubs.php');
+    header('Location: ../club/browse_clubs.php');
     exit;
 }
 
@@ -36,7 +36,7 @@ $is_super_admin = ($user_role == 'superadmin');
 if (!$is_club_admin && !$is_super_admin) {
     // If user is not the club admin or a super admin, deny access.
     $_SESSION['error_message'] = "You do not have permission to manage this club.";
-    header('Location: view_club.php?id=' . $club_id);
+    header('Location: ../club/view_club.php?id=' . $club_id);
     exit;
 }
 
@@ -100,7 +100,7 @@ $stmt->execute([$club_id]);
 $members = $stmt->fetchAll();
 
 // 7. HTML VIEW
-require_once 'header.php';
+require_once '../template/header.php';
 ?>
 
 <div class="dashboard-card">
@@ -172,5 +172,5 @@ require_once 'header.php';
 </div>
 
 <?php
-require_once 'footer.php';
+require_once '../template/footer.php';
 ?>

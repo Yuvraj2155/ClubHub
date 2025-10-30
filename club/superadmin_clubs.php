@@ -7,7 +7,7 @@
  */
 
 // 1. CONFIG & SESSION
-require_once 'config.php';
+require_once '../config.php';
 $user_id = $_SESSION['user_id'] ?? null;
 $user_role = $_SESSION['role'] ?? 'guest';
 
@@ -51,13 +51,13 @@ $stmt = $pdo->query(
 $all_clubs = $stmt->fetchAll();
 
 // 5. HTML VIEW
-require_once 'header.php';
+require_once '../template/header.php';
 ?>
 
 <div class="dashboard-card">
     <h1>Super Admin: Manage All Clubs</h1>
     <p>You can manage all clubs on the platform.</p>
-    <a href="dashboard.php">&larr; Back to Dashboard</a>
+    <a href="../dashboard.php">&larr; Back to Dashboard</a>
 
     <?php
     // Display any errors or success messages
@@ -113,5 +113,5 @@ require_once 'header.php';
 </div>
 
 <?php
-require_once 'footer.php';
+require_once '../template/footer.php';
 ?>

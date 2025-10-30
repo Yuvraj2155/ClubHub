@@ -6,12 +6,12 @@
  */
 
 // 1. CONFIG & SESSION
-require_once 'config.php';
+require_once '../config.php';
 
 // 2. PAGE PROTECTION (Req #5: Session Management)
 // If user is NOT logged in, redirect to login page
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
+    header('Location: ../login.php');
     exit;
 }
 
@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // 4. HTML VIEW
-require_once 'header.php';
+require_once '../template/header.php';
 ?>
 
 <div class="auth-wrapper">
@@ -109,5 +109,5 @@ require_once 'header.php';
 </div>
 
 <?php
-require_once 'footer.php';
+require_once '../template/footer.php';
 ?>

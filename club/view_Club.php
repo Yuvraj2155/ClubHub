@@ -8,7 +8,7 @@
  */
 
 // 1. CONFIG & SESSION
-require_once 'config.php';
+require_once '../config.php';
 $user_id = $_SESSION['user_id'] ?? null;
 $user_role = $_SESSION['role'] ?? 'guest';
 
@@ -141,7 +141,7 @@ $events = $event_stmt->fetchAll();
 
 
 // 6. HTML VIEW
-require_once 'header.php';
+require_once '../template/header.php';
 ?>
 
 <!-- Club Header -->
@@ -300,5 +300,5 @@ if (!empty($messages)) {
 
 
 <?php
-require_once 'footer.php';
+require_once '../template/footer.php';
 ?>
