@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // 4. HTML VIEW
 // Include the header template
-require_once 'header.php';
+require_once 'template/header.php';
 ?>
 
 <div class="auth-wrapper">
@@ -118,5 +118,5 @@ require_once 'header.php';
 
 <?php
 // Include the footer template
-require_once 'footer.php';
+require_once 'template/footer.php';
 ?>

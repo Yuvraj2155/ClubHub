@@ -18,7 +18,7 @@ if (!isset($_SESSION['user_id'])) {
 
 // 3. HTML VIEW
 // Include the header template
-require_once 'header.php';
+require_once 'template/header.php';
 ?>
 
 <div class="dashboard-card">
@@ -27,8 +27,8 @@ require_once 'header.php';
     
     <p>You are logged in to the Club Hub dashboard. From here, you will be able to:</p>
     <ul>
-        <li><a href="browse_clubs.php">Browse Clubs</a> (Coming soon)</li>
-        <li><a href="create_club.php">Create a New Club</a> (Coming soon)</li>
+        <li><a href="club/browse_clubs.php">Browse Clubs</a> (Coming soon)</li>
+        <li><a href="club/create_club.php">Create a New Club</a> (Coming soon)</li>
         <li><a href="#">View Your Profile</a> (Coming soon)</li>
     </ul>
 
@@ -40,14 +40,14 @@ require_once 'header.php';
     ?>
         <div class="super-admin-notice">
             <strong>Super Admin Panel:</strong>
-            <a href="superadmin_users.php">Manage All Users</a> | <a href="superadmin_clubs.php">Manage All Clubs</a>
+            <a href="/members/superadmin_users.php">Manage All Users</a> | <a href="/club/superadmin_clubs.php">Manage All Clubs</a>
         </div>
     <?php endif; ?>
 
-    <a href="logout.php" class="logout">Log Out</a>
+    <a href="/logout.php" class="logout">Log Out</a>
 </div>
 
 <?php
 // Include the footer template
-require_once 'footer.php';
+require_once 'template/footer.php';
 ?>
