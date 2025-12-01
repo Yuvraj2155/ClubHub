@@ -1,44 +1,53 @@
 <?php
-// Go up one level to find config.php
 require_once '../config.php';
 
-// Require user to be logged in
 if (!isLoggedIn()) {
     header("Location: ../login.php");
     exit;
 }
 
 $user_id = getCurrentUserId();
-$club_id = $_GET['club_id'] ?? null;
+$event_id = $_GET['id'] ?? null;
 $event_name = "";
 $event_description = "";
 $event_date = "";
 $location = "";
 $errors = [];
+$messages = [];
 
-if (!$club_id) {
+if (!$event_id) {
     header("Location: ../dashboard.php");
     exit;
 }
 
-// --- Check Permissions ---
 try {
-    // 1. Get Club Info
+    // 1. Get Event Info
+    $stmt = $pdo->prepare("SELECT * FROM events WHERE event_id = ?");
+    $stmt->execute([$event_id]);
+    $event = $stmt->fetch();
+
+    if (!$event) {
+        header("Location: ../dashboard.php");
+        exit;
+    }
+    
+    $club_id = $event['club_id_fk'];
+    $event_name = $event['event_name'];
+    $event_description = $event['event_description'];
+    $location = $event['location'];
+    $event_date = date('Y-m-d\TH:i', strtotime($event['event_date']));
+
+    // 2. Get Club Info
     $stmt = $pdo->prepare("SELECT creator_id_fk FROM clubs WHERE club_id = ?");
     $stmt->execute([$club_id]);
     $club = $stmt->fetch();
 
-    // 2. Get User's Membership Info
-    $stmt = $pdo->prepare("SELECT can_post FROM club_memberships WHERE user_id_fk = ? AND club_id_fk = ?");
-    $stmt->execute([$user_id, $club_id]);
-    $membership = $stmt->fetch();
-    
     // 3. Check Permissions
+    $is_author = ($event['user_id_fk'] == $user_id);
     $is_club_admin = ($club['creator_id_fk'] == $user_id);
     $is_super_admin = ($_SESSION['role'] == 'superadmin');
-    $can_post = $membership['can_post'] ?? 0;
-    
-    if (!$is_club_admin && !$is_super_admin && !$can_post) {
+
+    if (!$is_author && !$is_club_admin && !$is_super_admin) {
         header("Location: ../club/view_club.php?id=" . $club_id . "&error=nopermission");
         exit;
     }
@@ -47,7 +56,6 @@ try {
     $errors[] = "Database error: " . $e->getMessage();
 }
 
-// Handle Form Submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $event_name = trim($_POST['event_name']);
     $event_description = trim($_POST['event_description']);
@@ -59,19 +67,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (empty($event_date)) $errors[] = "Event date is required.";
     if (empty($location)) $errors[] = "Location is required.";
     
-    if (!empty($event_date) && strtotime($event_date) < time()) {
-        $errors[] = "Event date must be in the future.";
-    }
-
     if (empty($errors)) {
         try {
-            $stmt = $pdo->prepare("INSERT INTO events (event_name, event_description, event_date, location, user_id_fk, club_id_fk) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$event_name, $event_description, $event_date, $location, $user_id, $club_id]);
-            
-            header("Location: ../club/view_club.php?id=" . $club_id);
-            exit;
+            $stmt = $pdo->prepare("UPDATE events SET event_name = ?, event_description = ?, event_date = ?, location = ? WHERE event_id = ?");
+            $stmt->execute([$event_name, $event_description, $event_date, $location, $event_id]);
+            $messages[] = "Event updated successfully!";
         } catch (PDOException $e) {
-            $errors[] = "Error creating event: " . $e->getMessage();
+            $errors[] = "Error updating event: " . $e->getMessage();
         }
     }
 }
@@ -80,7 +82,7 @@ include '../template/header.php';
 ?>
 
 <div class="content-box form-container">
-    <h2>Create New Event</h2>
+    <h2>Edit Event</h2>
     <a href="../club/view_club.php?id=<?php echo $club_id; ?>">&laquo; Back to Club Page</a>
     <hr>
 
@@ -89,8 +91,13 @@ include '../template/header.php';
             <?php foreach ($errors as $error): ?><p><?php echo htmlspecialchars($error); ?></p><?php endforeach; ?>
         </div>
     <?php endif; ?>
+    <?php if (!empty($messages)): ?>
+        <div class="alert alert-success">
+            <?php foreach ($messages as $message): ?><p><?php echo htmlspecialchars($message); ?></p><?php endforeach; ?>
+        </div>
+    <?php endif; ?>
 
-    <form action="create_event.php?club_id=<?php echo $club_id; ?>" method="POST">
+    <form action="edit_event.php?id=<?php echo $event_id; ?>" method="POST">
         <div class="form-group">
             <label for="event_name">Event Name</label>
             <input type="text" id="event_name" name="event_name" class="form-control" value="<?php echo htmlspecialchars($event_name); ?>" required>
@@ -108,7 +115,7 @@ include '../template/header.php';
             <textarea id="event_description" name="event_description" class="form-control" required><?php echo htmlspecialchars($event_description); ?></textarea>
         </div>
         <div class="form-group">
-            <button type="submit" class="btn btn-primary">Create Event</button>
+            <button type="submit" class="btn btn-primary">Update Event</button>
         </div>
     </form>
 </div>

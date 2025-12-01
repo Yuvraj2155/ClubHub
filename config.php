@@ -46,5 +46,21 @@ try {
 } catch (\PDOException $e) {
      // If connection fails, stop the script and show an error.
      // In a real-world app, you'd log this, not show the user.
-     throw new \PDOException($e.getMessage(), (int)$e.getCode());
+     throw new \PDOException($e->getMessage(), (int)$e->getCode());
 }
+
+// ------------------------------------------------------------------
+// 3. GLOBAL HELPER FUNCTIONS
+// ------------------------------------------------------------------
+// These are the functions used by other pages to check login status.
+
+// Check if a user is logged in
+function isLoggedIn() {
+    return isset($_SESSION['user_id']);
+}
+
+// Get the current logged-in user's ID (or null if not logged in)
+function getCurrentUserId() {
+    return $_SESSION['user_id'] ?? null;
+}
+?>

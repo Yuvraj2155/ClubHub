@@ -7,30 +7,40 @@ if (!isLoggedIn()) {
 }
 
 $user_id = getCurrentUserId();
-$club_id = $_GET['club_id'] ?? null;
+$post_id = $_GET['id'] ?? null;
 $title = "";
 $content = "";
 $errors = [];
+$messages = [];
 
-if (!$club_id) {
+if (!$post_id) {
     header("Location: ../dashboard.php");
     exit;
 }
 
 try {
+    $stmt = $pdo->prepare("SELECT * FROM posts WHERE post_id = ?");
+    $stmt->execute([$post_id]);
+    $post = $stmt->fetch();
+
+    if (!$post) {
+        header("Location: ../dashboard.php");
+        exit;
+    }
+    
+    $club_id = $post['club_id_fk'];
+    $title = $post['title'];
+    $content = $post['content'];
+
     $stmt = $pdo->prepare("SELECT creator_id_fk FROM clubs WHERE club_id = ?");
     $stmt->execute([$club_id]);
     $club = $stmt->fetch();
 
-    $stmt = $pdo->prepare("SELECT can_post FROM club_memberships WHERE user_id_fk = ? AND club_id_fk = ?");
-    $stmt->execute([$user_id, $club_id]);
-    $membership = $stmt->fetch();
-    
+    $is_author = ($post['user_id_fk'] == $user_id);
     $is_club_admin = ($club['creator_id_fk'] == $user_id);
     $is_super_admin = ($_SESSION['role'] == 'superadmin');
-    $can_post = $membership['can_post'] ?? 0;
-    
-    if (!$is_club_admin && !$is_super_admin && !$can_post) {
+
+    if (!$is_author && !$is_club_admin && !$is_super_admin) {
         header("Location: ../club/view_club.php?id=" . $club_id . "&error=nopermission");
         exit;
     }
@@ -48,13 +58,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if (empty($errors)) {
         try {
-            $stmt = $pdo->prepare("INSERT INTO posts (title, content, user_id_fk, club_id_fk) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$title, $content, $user_id, $club_id]);
-            
-            header("Location: ../club/view_club.php?id=" . $club_id);
-            exit;
+            $stmt = $pdo->prepare("UPDATE posts SET title = ?, content = ? WHERE post_id = ?");
+            $stmt->execute([$title, $content, $post_id]);
+            $messages[] = "Post updated successfully!";
         } catch (PDOException $e) {
-            $errors[] = "Error creating post: " . $e->getMessage();
+            $errors[] = "Error updating post: " . $e->getMessage();
         }
     }
 }
@@ -63,7 +71,7 @@ include '../template/header.php';
 ?>
 
 <div class="content-box form-container">
-    <h2>Create New Post</h2>
+    <h2>Edit Post</h2>
     <a href="../club/view_club.php?id=<?php echo $club_id; ?>">&laquo; Back to Club Page</a>
     <hr>
 
@@ -72,8 +80,13 @@ include '../template/header.php';
             <?php foreach ($errors as $error): ?><p><?php echo htmlspecialchars($error); ?></p><?php endforeach; ?>
         </div>
     <?php endif; ?>
+    <?php if (!empty($messages)): ?>
+        <div class="alert alert-success">
+            <?php foreach ($messages as $message): ?><p><?php echo htmlspecialchars($message); ?></p><?php endforeach; ?>
+        </div>
+    <?php endif; ?>
 
-    <form action="create_post.php?club_id=<?php echo $club_id; ?>" method="POST">
+    <form action="edit_post.php?id=<?php echo $post_id; ?>" method="POST">
         <div class="form-group">
             <label for="title">Post Title</label>
             <input type="text" id="title" name="title" class="form-control" value="<?php echo htmlspecialchars($title); ?>" required>
@@ -83,7 +96,7 @@ include '../template/header.php';
             <textarea id="content" name="content" class="form-control" required><?php echo htmlspecialchars($content); ?></textarea>
         </div>
         <div class="form-group">
-            <button type="submit" class="btn btn-primary">Create Post</button>
+            <button type="submit" class="btn btn-primary">Update Post</button>
         </div>
     </form>
 </div>
