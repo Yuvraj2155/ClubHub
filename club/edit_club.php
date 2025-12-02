@@ -1,139 +1,133 @@
 <?php
-/*
- * edit_club.php
- * Allows a Club Admin or Super Admin to:
- * - Edit the club's name and description.
- * - Delete the club.
- */
-
-// 1. CONFIG & SESSION
 require_once '../config.php';
-$user_id = $_SESSION['user_id'] ?? null;
-$user_role = $_SESSION['role'] ?? 'guest';
 
-// 2. GET CLUB ID
-if (!isset($_GET['club_id'])) {
-    header('Location: browse_clubs.php');
-    exit;
-}
-$club_id = (int)$_GET['club_id'];
-
-// 3. FETCH CLUB & PERMISSION DATA
-$stmt = $pdo->prepare("SELECT * FROM clubs WHERE club_id = ?");
-$stmt->execute([$club_id]);
-$club = $stmt->fetch();
-
-if (!$club) {
-    header('Location: browse_clubs.php');
+if (!isLoggedIn()) {
+    header("Location: ../login.php");
     exit;
 }
 
-// 4. AUTHORIZATION (Req #4: Web Authentication)
-$is_club_admin = ($club['creator_id_fk'] == $user_id);
-$is_super_admin = ($user_role == 'superadmin');
+$user_id = getCurrentUserId();
+$club_id = $_GET['id'] ?? null;
+$errors = [];
+$messages = [];
 
-if (!$is_club_admin && !$is_super_admin) {
-    $_SESSION['error_message'] = "You do not have permission to edit this club.";
-    header('Location: view_club.php?id=' . $club_id);
+if (!$club_id) {
+    header("Location: ../dashboard.php");
     exit;
 }
 
-// 5. HANDLE POST ACTIONS (Update Details or Delete Club)
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
-    
-    try {
-        if ($action === 'update_details') {
-            // Server-Side Validation (Req #7)
-            $club_name = trim($_POST['club_name'] ?? '');
-            $club_description = trim($_POST['club_description'] ?? '');
+// --- Check Permissions ---
+try {
+    $stmt = $pdo->prepare("SELECT * FROM clubs WHERE club_id = ?");
+    $stmt->execute([$club_id]);
+    $club = $stmt->fetch();
 
-            if (empty($club_name) || empty($club_description)) {
-                $errors[] = "Club Name and Description cannot be empty.";
-            } else {
-                // PHP for Updating Records (Req #2)
-                $stmt = $pdo->prepare("UPDATE clubs SET club_name = ?, club_description = ? WHERE club_id = ?");
-                $stmt->execute([$club_name, $club_description, $club_id]);
-                
-                // Refresh club data to show updated info
-                $club['club_name'] = $club_name;
-                $club['club_description'] = $club_description;
-                
-                $messages[] = "Club details updated successfully.";
-            }
-        } 
-        elseif ($action === 'delete_club') {
-            // PHP for Removing Records (Req #2)
-            // The database is set up with ON DELETE CASCADE,
-            // so deleting the club will also delete all:
-            // - memberships
-            // - posts
-            // - events
-            $stmt = $pdo->prepare("DELETE FROM clubs WHERE club_id = ?");
-            $stmt->execute([$club_id]);
+    if (!$club) {
+        header("Location: ../dashboard.php");
+        exit;
+    }
+
+    $is_club_admin = ($club['creator_id_fk'] == $user_id);
+    $is_super_admin = ($_SESSION['role'] == 'superadmin');
+
+    if (!$is_club_admin && !$is_super_admin) {
+        header("Location: view_club.php?id=" . $club_id);
+        exit;
+    }
+
+} catch (PDOException $e) {
+    $errors[] = "Database error: " . $e->getMessage();
+}
+
+// Handle Update (Name/Description only)
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_club'])) {
+    $club_name = trim($_POST['club_name']);
+    $club_description = trim($_POST['club_description']);
+
+    if (empty($club_name)) $errors[] = "Club name cannot be empty.";
+    if (empty($club_description)) $errors[] = "Club description cannot be empty.";
+
+    if (empty($errors)) {
+        try {
+            $stmt = $pdo->prepare("UPDATE clubs SET club_name = ?, club_description = ? WHERE club_id = ?");
+            $stmt->execute([$club_name, $club_description, $club_id]);
+            $messages[] = "Club updated successfully!";
             
-            // Redirect to browse page as this club no longer exists
-            $_SESSION['message'] = "Club '" . htmlspecialchars($club['club_name']) . "' has been permanently deleted.";
-            header('Location: browse_clubs.php');
-            exit;
+            // Refresh Data
+            $stmt = $pdo->prepare("SELECT * FROM clubs WHERE club_id = ?");
+            $stmt->execute([$club_id]);
+            $club = $stmt->fetch();
+        } catch (PDOException $e) {
+            $errors[] = "Error updating club: " . $e->getMessage();
         }
-    } catch (PDOException $e) {
-        $errors[] = "Database error: " . $e->getMessage();
     }
 }
 
-// 6. HTML VIEW
-require_once '../template/header.php';
+include '../template/header.php';
 ?>
 
-<div class="auth-wrapper">
-    <div class="auth-card">
-        <h1>Edit Club Settings</h1>
+<div class="content-box">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>Club Settings: <?php echo htmlspecialchars($club['club_name']); ?></h2>
+        <a href="view_club.php?id=<?php echo $club_id; ?>" class="btn btn-secondary" style="width:auto;">&laquo; Back to Club</a>
+    </div>
+    <hr>
 
-        <?php
-        // Display any errors or success messages
-        if (!empty($errors)) {
-            echo '<ul class="message-box errors">';
-            foreach ($errors as $error) {
-                echo '<li>' . htmlspecialchars($error) . '</li>';
-            }
-            echo '</ul>';
-        }
-        if (!empty($messages)) {
-            echo '<div class="message-box success">' . htmlspecialchars($messages[0]) . '</div>';
-        }
-        ?>
+    <?php if (!empty($messages)): ?>
+        <div class="alert alert-success"><?php echo htmlspecialchars($messages[0]); ?></div>
+    <?php endif; ?>
+    <?php if (!empty($errors)): ?>
+        <div class="alert alert-danger"><?php echo htmlspecialchars($errors[0]); ?></div>
+    <?php endif; ?>
 
-        <!-- Edit Details Form -->
-        <form action="edit_club.php?club_id=<?php echo $club_id; ?>" method="POST">
-            <input type="hidden" name="action" value="update_details">
+    <!-- 1. Update Details Form -->
+    <div style="margin-bottom: 40px;">
+        <h3>Update Details</h3>
+        <form action="edit_club.php?id=<?php echo $club_id; ?>" method="POST">
             <div class="form-group">
                 <label for="club_name">Club Name</label>
-                <input type="text" id="club_name" name="club_name" value="<?php echo htmlspecialchars($club['club_name']); ?>" required>
+                <input type="text" id="club_name" name="club_name" class="form-control" value="<?php echo htmlspecialchars($club['club_name']); ?>" required>
             </div>
             <div class="form-group">
                 <label for="club_description">Club Description</label>
-                <textarea id="club_description" name="club_description" rows="5" required><?php echo htmlspecialchars($club['club_description']); ?></textarea>
+                <textarea id="club_description" name="club_description" class="form-control" required><?php echo htmlspecialchars($club['club_description']); ?></textarea>
             </div>
-            <button type="submit" class="btn">Save Changes</button>
+            <div class="form-group">
+                <button type="submit" name="update_club" class="btn btn-primary">Save Changes</button>
+            </div>
         </form>
-        
-        <hr class="form-divider">
+    </div>
 
-        <!-- Delete Club Form -->
-        <div class="danger-zone">
-            <h3>Danger Zone</h3>
-            <p>Deleting your club is permanent and cannot be undone. All posts, events, and member data will be lost.</p>
-            <form action="edit_club.php?club_id=<?php echo $club_id; ?>" method="POST">
-                <input type="hidden" name="action" value="delete_club">
-                <button type="submit" class="btn btn-danger" onclick="return confirm('ARE YOU SURE?\n\nThis will permanently delete your club and all its content.');">
-                    Delete This Club
-                </button>
-            </form>
+    <!-- 2. Management Actions -->
+    <div style="margin-bottom: 40px;">
+        <h3>Management Actions</h3>
+        <div style="display:flex; gap: 15px; flex-wrap:wrap;">
+            
+            <!-- Manage Members -->
+            <a href="../members/manage_members.php?id=<?php echo $club_id; ?>" style="flex:1; min-width:250px; text-decoration:none;">
+                <div style="border:1px solid #ccc; padding:20px; border-radius:8px; text-align:center; background:#f9f9f9; color:#333;">
+                    <h4 style="margin:0 0 10px 0;">Manage Members</h4>
+                    <p style="font-size:0.9rem; color:#666;">Kick members or grant posting permissions.</p>
+                </div>
+            </a>
+
+            <!-- Transfer Ownership -->
+            <a href="transfer_club.php?id=<?php echo $club_id; ?>" style="flex:1; min-width:250px; text-decoration:none;">
+                <div style="border:1px solid #ccc; padding:20px; border-radius:8px; text-align:center; background:#f9f9f9; color:#333;">
+                    <h4 style="margin:0 0 10px 0;">Transfer Ownership</h4>
+                    <p style="font-size:0.9rem; color:#666;">Give full control of this club to another member.</p>
+                </div>
+            </a>
         </div>
     </div>
+
+    <!-- 3. Danger Zone (Delete) -->
+    <div style="background-color: #fff5f5; border: 1px solid #ffcdd2; padding: 20px; border-radius: 8px;">
+        <h3 style="color: var(--danger-color); margin-top:0;">Danger Zone</h3>
+        <p>Deleting a club is permanent. It will remove all members, posts, and events associated with it.</p>
+        <a href="delete_club.php?id=<?php echo $club_id; ?>" class="btn btn-danger" style="width: auto; display:inline-block;">Delete Club</a>
+    </div>
+
 </div>
 
-<?php
-require_once '../template/footer.php';
-?>
+<?php include '../template/footer.php'; ?>

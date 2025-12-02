@@ -7,6 +7,7 @@
     --text-color: #333;
     --error-color: #D8000C;
     --success-color: #4F8A10;
+    --danger-color: #dc3545;
 }
 
 body {
@@ -48,7 +49,19 @@ body {
     text-decoration: none;
 }
 
-.nav-menu a {
+.nav-menu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.nav-item {
+    margin-left: 10px;
+}
+
+.nav-link {
     color: var(--text-color);
     text-decoration: none;
     font-weight: 500;
@@ -57,8 +70,17 @@ body {
     transition: background-color 0.2s ease;
 }
 
-.nav-menu a:hover {
+.nav-link:hover {
     background-color: var(--bg-color);
+}
+
+.nav-link-button {
+    background-color: var(--primary-color);
+    color: white;
+}
+.nav-link-button:hover {
+    background-color: #004a80;
+    color: white;
 }
 
 /* --- Main Content Container --- */
@@ -69,28 +91,30 @@ body {
     margin: 2rem auto;
 }
 
-/* --- Cards for Auth & Dashboard --- */
-.auth-card, .dashboard-card {
+/* --- Cards --- */
+.auth-card, .dashboard-card, .content-box {
     background-color: var(--card-bg);
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
     padding: 2.5rem;
     border: 1px solid #e9ecef;
+    margin-bottom: 20px;
 }
 
 /* Center auth cards on their pages */
-.auth-wrapper {
+.auth-wrapper, .form-container {
     max-width: 420px;
     margin: 2rem auto;
 }
 
-.auth-card h1, .dashboard-card h1 {
+.auth-card h1, .dashboard-card h1, h2, h3 {
     text-align: center;
     color: var(--primary-color);
     margin-top: 0;
     margin-bottom: 1.5rem;
 }
 
+/* --- Forms --- */
 .form-group {
     margin-bottom: 1rem;
 }
@@ -101,15 +125,19 @@ body {
     font-weight: 600;
 }
 
-.form-group input {
+.form-control, .form-group input, .form-group textarea, .form-group select {
     width: 100%;
     padding: 0.75rem;
     border: 1px solid #ced4da;
     border-radius: 8px;
     box-sizing: border-box; /* Important for 100% width */
+    font-family: inherit;
+    font-size: 1rem;
 }
 
+/* --- Buttons --- */
 .btn {
+    display: inline-block;
     width: 100%;
     padding: 0.85rem;
     border: none;
@@ -120,68 +148,77 @@ body {
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s ease;
+    text-align: center;
+    text-decoration: none;
+    box-sizing: border-box;
 }
 
 .btn:hover {
     background-color: var(--primary-color);
+    color: white;
 }
 
-.auth-switch {
-    text-align: center;
-    margin-top: 1.5rem;
+.btn-primary {
+    background-color: var(--secondary-color);
 }
 
-.auth-switch a {
-    color: var(--secondary-color);
-    text-decoration: none;
-    font-weight: 600;
+.btn-secondary {
+    background-color: #036fdb;
+}
+.btn-secondary:hover {
+    background-color: #2e8be9;
 }
 
-/* --- Messages & Errors --- */
-.message-box {
+.btn-danger {
+    background-color: var(--danger-color);
+}
+.btn-danger:hover {
+    background-color: #bd2130;
+}
+
+.btn-full-width {
+    width: 100%;
+}
+
+/* --- Alerts --- */
+.alert {
     padding: 1rem;
     margin-bottom: 1rem;
     border-radius: 8px;
     text-align: center;
-    list-style: none;
-    padding-left: 0;
 }
 
-.errors {
+.alert-danger {
     background-color: #FFD2D2;
     color: var(--error-color);
     border: 1px solid var(--error-color);
 }
 
-.success {
+.alert-success {
     background-color: #DFF2BF;
     color: var(--success-color);
     border: 1px solid var(--success-color);
 }
 
-/* --- Dashboard Specific --- */
-.dashboard-card p {
-    font-size: 1.1rem;
-    line-height: 1.6;
-}
-
-.dashboard-card a {
+/* --- Links --- */
+a {
     color: var(--secondary-color);
     text-decoration: none;
 }
-
-.dashboard-card a.logout {
-    color: var(--error-color);
-    font-weight: 600;
-    display: inline-block;
-    margin-top: 1.5rem;
+a:hover {
+    text-decoration: underline;
 }
 
-.super-admin-notice {
-    background-color: #fff3cd;
-    border: 1px solid #ffeeba;
-    color: #856404;
-    padding: 1rem;
-    border-radius: 8px;
-    margin-top: 1.5rem;
+/* --- Lists (Clubs, Members) --- */
+.club-list, .member-list {
+    list-style: none;
+    padding: 0;
+}
+
+.club-list-item, .member-list-item {
+    border-bottom: 1px solid #eee;
+    padding: 15px 0;
+}
+.club-list-item:last-child {
+    border-bottom: none;
 }
